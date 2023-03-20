@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class NewBehaviourScript : MonoBehaviour
 {
-// 01. 변수
+    // 01. 변수: 변수와 데이
     //------------------------------------------------------(변수의 선언방식)
     //정수(int) 타입의 변수 선언
     private int value01;
@@ -67,7 +67,7 @@ public class NewBehaviourScript : MonoBehaviour
 
         }
     }
-// 02.
+     // 02. 변수: 기본 데이터 형식
      //------------------------------------------------------(숫자 형식-정수)
      private void Awake()
      {
@@ -128,9 +128,145 @@ public class NewBehaviourScript : MonoBehaviour
         Debug.Log("문자열: " + valueString);
         Debug.Log("논리: " + valueBool);
     }
-    //------------------------------------------------------(오브젝트 형식-박싱)
-    //------------------------------------------------------(오브젝트 형식-박싱)
-    //------------------------------------------------------(오브젝트 형식-박싱)
-    //------------------------------------------------------(오브젝트 형식-박싱)
-    //------------------------------------------------------(오브젝트 형식-박싱)
+    //03. 변수: 데이터형 변환
+    //------------------------------------------------------(정수 변환-크기)
+    private void Awake()
+    {
+        sbyte sbyteValue = 10;
+        int intValue = (int)sbyteValue;
+
+        Debug.Log("sbyteValue: " + sbyteValue);
+        Debug.Log("intValue: " + intValue);
+
+        //sbyte변수가 저장할 수 있는 최대치인 127보다 높은 값을 넣었기 때문에 오버플로우 발생
+        intValue = 130; 
+        sbyteValue = (sbyte)intValue;
+
+        Debug.Log("sbyteValue: " + sbyteValue);
+        Debug.Log("intValue: " + intValue);
+    }
+    //------------------------------------------------------(정수 변환-부호)
+    private void Awake()
+    {
+        sbyte sbyteValue = 31;
+        byte byteValue = (byte)sbyteValue;
+
+        Debug.Log("sbyteValue: " + sbyteValue);
+        Debug.Log("byteValue: " + byteValue);
+
+        //부호가 있는 경우(음수)
+        sbyteValue = -31;
+        byteValue = (byte)sbyteValue;
+
+        Debug.Log("sbyteValue: " + sbyteValue);
+        Debug.Log("byteValue: " + byteValue);
+        
+        //최댓값보다 클 때
+        byteValue = 200;
+        sbyteValue = (sbyte)byteValue;
+
+        Debug.Log("sbyteValue: " + sbyteValue);
+        Debug.Log("byteValue: " + byteValue);
+    }
+    //------------------------------------------------------(실수 변환-크기)
+    private void Awake()
+    {
+        float floatValue = 69.6875f;
+        double doubleValue = (double)floatValue;
+
+        Debug.Log("floatValue: " + floatValue);
+        Debug.Log("doubleValue: " +  doubleValue);
+
+        floatValue = 0.1f;
+        doubleValue = (double)floatValue;
+
+        Debug.Log("floatValue: " + floatValue);
+        Debug.Log("doubleValue: " + doubleValue);
+    }
+    //------------------------------------------------------(실수-정수 변환)
+    private void Awake()
+    {
+        float floatValue = 0.9f;
+        int intValue = (int)floatValue;
+
+        Debug.Log("floatValue: " + floatValue);
+        Debug.Log("intValue: " + intValue);
+
+        floatValue = 1.1f;
+        intValue = (int)floatValue;
+
+        Debug.Log("floatValue: " + floatValue);
+        Debug.Log("intValue: " + intValue);
+    }
+    //------------------------------------------------------(문자열-숫자 변환 1)
+    private void Awake()
+    {
+        int intValue = 10;
+        float floatValue = 12.3456f;
+        string stringValue = "33"; //문자열에 숫자가 아닌 데이터가 있으면 숫자로 바꿀 수 없다.
+
+        Debug.Log("intValue: " + intValue);
+        Debug.Log("floatValue: " + floatValue);
+        Debug.Log("stringValue: " + stringValue);
+
+        intValue = int.Parse(stringValue);
+        stringValue = "33.4567"; //"33.4567"과 같은 실수는 int로 변환이 안된다.
+        floatValue = float.Parse(stringValue);
+
+        Debug.Log("intValue: " + intValue);
+        Debug.Log("floatValue: " + floatValue);
+        Debug.Log("stringValue: " + stringValue);
+    }
+    //------------------------------------------------------(문자열-숫자 변환 2)
+    private void Awake()
+    {
+        string stringValue = "숫자가 아닙니다.";
+        int intValue = 10;
+
+        bool isConversion = int.TryParse(stringValue, out intValue);
+        if (isConversion == true)
+        {
+            Debug.Log("stringValue: " + stringValue);
+            Debug.Log("intlue: " + intValue);
+        }
+        else
+        {
+            Debug.Log("stringValue 변수에 들어있는 내용이 숫자가 아니라 실패함");
+        }
+    }
+    
+    //------------------------------------------------------(문자열-숫자 변환 3)
+    private void Awake()
+    {
+        string stringValue = "초기화";
+        int intValue = 33;
+        float floatValue = 12.3456f;
+
+        Debug.Log("stringValue: " + stringValue);
+
+        //정수 -> 문자열
+        stringValue = intValue.ToString();
+        Debug.Log("stringValue: " + stringValue);
+
+        //실수 -> 문자열
+        stringValue = floatValue.ToString();
+        Debug.Log("stringValue: " + stringValue);
+    }
+    //04.변수 : 상수, 열거형, Nullable, var
+    //------------------------------------------------------(문자열-숫자 변환 1)
+    
+    //------------------------------------------------------(문자열-숫자 변환 1)
+    //------------------------------------------------------(문자열-숫자 변환 1)
+    //------------------------------------------------------(문자열-숫자 변환 1)
+    //------------------------------------------------------(문자열-숫자 변환 1)
+    //------------------------------------------------------(문자열-숫자 변환 1)
+    //------------------------------------------------------(문자열-숫자 변환 1)
+    //------------------------------------------------------(문자열-숫자 변환 1)
+    //------------------------------------------------------(문자열-숫자 변환 1)
+    //------------------------------------------------------(문자열-숫자 변환 1)
+    //------------------------------------------------------(문자열-숫자 변환 1)
+    //------------------------------------------------------(문자열-숫자 변환 1)
+    //------------------------------------------------------(문자열-숫자 변환 1)
+    //------------------------------------------------------(문자열-숫자 변환 1)
+                    
 }
