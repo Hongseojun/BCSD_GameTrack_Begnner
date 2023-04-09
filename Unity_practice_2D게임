@@ -1,22 +1,106 @@
--------------------------------------(NPC와의 대화 + 사물 설명 + 초상화띄우기)
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-//플레이어 캐릭터의 스크립트
-public class LifeCycle : MonoBehaviour
+//오브젝트 데이터 따로 생성
+public class ObjData : MonoBehaviour
 {
     public int id;
     public bool isNpc;
 
 }
 
+//퀘스트 데이터 따로 생성
+public class QuestData
+{
+    public string questName;
+    public int[] npcId;
+    
+    public QuestData(string name, int[] npc)
+    {
+        questName = name;
+        npcId = npc;
+    }
+}
+
+//퀘스트를 도와주는 오브켁트 따로 생성
+public class QuestManager : MonoBehaviour
+{
+    public int questId;
+    public int questActionIndex; //퀘스트 순서용 인덱스
+    public GameObject[] questObject;
+
+    Dictionary<int, QuestData> questList;
+
+    void Awake()
+    {
+        questList = new Dictionary<int, QuestData>();
+        GenerateData();
+    }
+    void GenerateData()
+    {
+        questList.Add(10, new QuestData("마을 사람들과 대화하기", new int[] {1000, 2000}));
+        questList.Add(20, new QuestData("루도의 동전 찾아주기", new int[] { 5000, 2000 }));
+        questList.Add(30, new QuestData("퀘스트 올 클리어!", new int[] { 0 }));
+    }
+
+    public int GetQuestTalkIndex(int id)
+    {
+        return questId + questActionIndex;
+    }
+
+    //매개변수 있는 checkquest
+    public string CheckQuest(int id)
+    {
+        //next talk target
+        if(id == questList[questId].npcId[questActionIndex])
+        questActionIndex++;
+
+        //control quest object
+        ControlObject();
+
+        //talk complete & next quest
+        if (questActionIndex == questList[questId].npcId.Length)
+            NextQuest();
+
+        //quest name
+        return questList[questId].questName;
+    }
+    
+    //매개변수 없는 checkquest
+    public string CheckQuest()
+    {
+        return questList[questId].questName;
+    }
+
+    void NextQuest()
+    {
+        questId += 10;
+        questActionIndex = 0;
+    }
+
+    void ControlObject()
+    {
+        switch (questId)
+        {
+            case 10:
+                if (questActionIndex == 2)
+                    questObject[0].SetActive(true);
+                break;
+            case 20:
+                if (questActionIndex == 1)
+                    questObject[0].SetActive(false);
+                break;
+        }
+    }
+}
 //게임 진행을 도와주는 오브젝트 따로 생성
 public class GameManager : MonoBehaviour
 {
     //대화를 위한 변수
     public TalkManager talkManager;
+    public QuestManager questManager;
     public GameObject talkPanel;
     public Text talkText;
     public GameObject scanObject;
@@ -24,6 +108,11 @@ public class GameManager : MonoBehaviour
     public int talkIndex;
     //이미지를 위한 변수
     public Image portraitImg;
+
+    void Start()
+    {
+        Debug.Log(questManager.CheckQuest());
+    }
 
     public void Action(GameObject scanObj)
     {
@@ -42,13 +131,20 @@ public class GameManager : MonoBehaviour
     }
     void Talk(int id, bool isNpc)
     {
-        string talkData = talkManager.GetTalk(id, talkIndex);
+        //set Talk Data
+        int questTalkIndex = questManager.GetQuestTalkIndex(id);
+        string talkData = talkManager.GetTalk(id + questTalkIndex, talkIndex);
+
+        //End Talk
         if (talkData == null)
         { 
             isAction=false;
             talkIndex = 0;
+            questManager.CheckQuest(id);
             return;
         }
+
+        //Continue Talk
         if(isNpc)
         {
             talkText.text = talkData.Split(':')[0];
@@ -81,12 +177,34 @@ public class TalkManager: MonoBehaviour
     }
     void GenerateData()
     {
-        //100, 200, 1000은 대화할 NPC의 ID이다.
+        //talk data
+        //NPC A: 1000, NPC B: 2000
+        //Box: 3000, Desk: 4000
         //Npc의 문장 뒤에 초상화 주소를 적어 어떤 초상화를 내보낼건지 적는다.
-        talkData.Add(1000, new string[] {"안녕?:0", "이 곳에 처음 왔구나?:0"});
-        talkData.Add(100, new string[] {"평범한 나무상자다." });
-        talkData.Add(200, new string[] { "누군가 사용했던 흔적이 있는 책상이다." });
+        talkData.Add(1000, new string[] {"안녕?:0", "이 곳에 처음 왔구나?:0",
+                                        "한 번 둘러보도록 해.:0"});
+        talkData.Add(2000, new string[] { "여어.:1", "이 호수는 정말 아름답지?:0",
+                                        "사실 이 호수에는 무언가의 비밀이 숨겨져 있다고 해."});
+        talkData.Add(3000, new string[] {"평범한 나무상자다." });
+        talkData.Add(4000, new string[] { "누군가 사용했던 흔적이 있는 책상이다." });
 
+        //quest talk
+        talkData.Add(10 + 1000, new string[] {"어서 와.:0", "이 마을에 놀라운 전설이 있다는데:1",
+                                                "오른쪽 호수 쪽에 루도가 알려줄꺼야.:0"});
+
+        talkData.Add(11 + 2000, new string[] {"여어.:1", "이 호수의 전설을 들으러 온거야?:0",
+        "그럼 일 좀 하나 해주면 좋을텐데...:1", "내 집 근처에 떨어진 동전 좀 주워줬으면 해: 2"});
+
+        talkData.Add(20 + 1000, new string[] {"루도의 동전?:1", "돈을 흘리고 다니면 못쓰지!:3",
+        "나중에 루도에게 한마디 해야겠어.:3"});
+
+        talkData.Add(20 + 2000, new string[] {"찾으면 꼭 좀 가져다 줘.:1"});
+
+        talkData.Add(20 + 5000, new string[] {"근처에서 동전을 찾았다."});
+
+        talkData.Add(21 + 2000, new string[] { "엇, 찾아줘서 고마워.:2" });
+
+        //potrait data
         portraitData.Add(1000 + 0, portraitArr[0]);
         portraitData.Add(1000 + 1, portraitArr[1]);
         portraitData.Add(1000 + 2, portraitArr[2]);
@@ -96,6 +214,20 @@ public class TalkManager: MonoBehaviour
 
     public string GetTalk(int id, int talkIndex)
     {
+        if (!talkData.ContainsKey(id))
+        {
+            if (!talkData.ContainsKey(id - id%10))
+            {
+                //퀘스트 맨 처음 대사마저 없을 때
+                //기본 대사를 가지고 온다.
+                return GetTalk(id - id%100, talkIndex);
+            }
+            else
+                //해당 퀘스트 진행 순서 대사가 없을 때의 예외처리
+                //퀘스트 맨 처음 대사를 가지고 온다.
+                return GetTalk(id - id % 10, talkIndex);
+        }
+
         if (talkIndex == talkData[id].Length)
             return null;
         else
