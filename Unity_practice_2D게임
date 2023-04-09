@@ -101,13 +101,15 @@ public class GameManager : MonoBehaviour
     //대화를 위한 변수
     public TalkManager talkManager;
     public QuestManager questManager;
-    public GameObject talkPanel;
-    public Text talkText;
+    public Animator talkPanel;
+    public TypeEffect talk;
     public GameObject scanObject;
     public bool isAction;
     public int talkIndex;
     //이미지를 위한 변수
     public Image portraitImg;
+    public Animator portraitAnim;
+    public Sprite prevPortrait;
 
     void Start()
     {
@@ -116,24 +118,29 @@ public class GameManager : MonoBehaviour
 
     public void Action(GameObject scanObj)
     {
-        if (isAction)
-        {
-            isAction = false;
-        }
-        else
-        {
-            isAction = true;
-            scanObject = scanObj;
-            ObjData objData = scanObject.GetComponent<ObjData>();
-            Talk(objData.id, objData.isNpc);
-        }
-        talkPanel.SetActive(isAction);
+        //get current object
+        scanObject = scanObj;
+        ObjData objData = scanObject.GetComponent<ObjData>();
+        Talk(objData.id, objData.isNpc);
+
+        //visible talk for action
+        talkPanel.SetBool("isShow", isAction);
     }
     void Talk(int id, bool isNpc)
     {
         //set Talk Data
-        int questTalkIndex = questManager.GetQuestTalkIndex(id);
-        string talkData = talkManager.GetTalk(id + questTalkIndex, talkIndex);
+        int questTalkIndex = 0;
+        string talkData = "";
+        if (talk.isAnim)
+        {
+            talk.SetMsg("");
+            return;
+        }
+        else
+        {
+            questTalkIndex = questManager.GetQuestTalkIndex(id);
+            talkData = talkManager.GetTalk(id + questTalkIndex, talkIndex);
+        }
 
         //End Talk
         if (talkData == null)
@@ -147,14 +154,21 @@ public class GameManager : MonoBehaviour
         //Continue Talk
         if(isNpc)
         {
-            talkText.text = talkData.Split(':')[0];
+            talk.SetMsg(talkData.Split(':')[0]);
+
             //Npc면 그림 띄우기
             portraitImg.sprite = talkManager.GetPortrait(id, int.Parse(talkData.Split(':')[1]));
             portraitImg.color = new Color(1, 1, 1, 1);
+            if (prevPortrait != portraitImg.sprite)
+            {
+                portraitAnim.SetTrigger("doEffect");
+                prevPortrait = portraitImg.sprite;
+            }
         }
         else
         {
-            talkText.text = talkData;
+            talk.SetMsg(talkData);
+
             //Npc가 아니면 그림 투명화
             portraitImg.color = new Color(1, 1, 1, 0);
         }
@@ -238,5 +252,81 @@ public class TalkManager: MonoBehaviour
     public Sprite GetPortrait(int id, int portraitIndex)
     {
         return portraitData[id + portraitIndex];
+    }
+}
+
+public class TypeEffect : MonoBehaviour
+{
+    public int CharPerSeconds;
+    public GameObject EndCursor;
+    public bool isAnim;
+
+    Text msgText;
+    AudioSource audioSource;
+
+    string targetMsg;
+    int index;
+    float interval;
+
+
+    void Awake()
+    {
+        msgText = GetComponent<Text>();
+        audioSource = GetComponent<AudioSource>();
+    }
+
+    public void SetMsg(string msg)
+    {
+        if (isAnim)
+        {
+            msgText.text = targetMsg;
+            CancelInvoke();
+            EffectEnd();
+        }
+        else
+        {
+            targetMsg = msg;
+            EffectStart();
+        }
+    }
+
+    void EffectStart()
+    {
+        msgText.text = "";
+        index = 0;
+        EndCursor.SetActive(false);
+
+        //start animation
+        interval = 1.0f/CharPerSeconds;
+        Debug.Log(interval);
+
+        isAnim = true;
+
+        Invoke("Effecting", 1/CharPerSeconds);
+    }
+    void Effecting()
+    {
+        //end animation
+        if (msgText.text == targetMsg)
+        {
+            EffectEnd();
+            return;
+        }
+
+        msgText.text += targetMsg[index];
+
+        //sound
+        if (targetMsg[index] != ' ' || targetMsg[index] != '.')
+            audioSource.Play();
+
+        index++;
+
+        //recursive
+        Invoke("Effecting", 1 / CharPerSeconds);
+    }
+    void EffectEnd()
+    {
+        isAnim = false;
+        EndCursor.SetActive(true);
     }
 }
