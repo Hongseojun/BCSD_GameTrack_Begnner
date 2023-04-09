@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -80,7 +81,7 @@ public class QuestManager : MonoBehaviour
         questActionIndex = 0;
     }
 
-    void ControlObject()
+    public void ControlObject()
     {
         switch (questId)
         {
@@ -89,6 +90,8 @@ public class QuestManager : MonoBehaviour
                     questObject[0].SetActive(true);
                 break;
             case 20:
+                if (questActionIndex == 0)
+                    questObject[0].SetActive(true);
                 if (questActionIndex == 1)
                     questObject[0].SetActive(false);
                 break;
@@ -104,6 +107,10 @@ public class GameManager : MonoBehaviour
     public Animator talkPanel;
     public TypeEffect talk;
     public GameObject scanObject;
+    public GameObject menuSet;
+    public GameObject player;
+    public Text nametext;
+    public Text questText;
     public bool isAction;
     public int talkIndex;
     //이미지를 위한 변수
@@ -113,7 +120,19 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        Debug.Log(questManager.CheckQuest());
+        GameLoad();
+        questText.text = questManager.CheckQuest();
+    }
+
+    void Update()
+    {
+        //sub menu
+        //Cancel은 ESC에 할당
+        if (Input.GetButtonDown("Cancel"))
+            if (menuSet.activeSelf)
+                menuSet.SetActive(false);
+            else
+                menuSet.SetActive(true);
     }
 
     public void Action(GameObject scanObj)
@@ -147,7 +166,7 @@ public class GameManager : MonoBehaviour
         { 
             isAction=false;
             talkIndex = 0;
-            questManager.CheckQuest(id);
+            questText.text = questManager.CheckQuest(id);
             return;
         }
 
@@ -159,6 +178,7 @@ public class GameManager : MonoBehaviour
             //Npc면 그림 띄우기
             portraitImg.sprite = talkManager.GetPortrait(id, int.Parse(talkData.Split(':')[1]));
             portraitImg.color = new Color(1, 1, 1, 1);
+            //animation portrait
             if (prevPortrait != portraitImg.sprite)
             {
                 portraitAnim.SetTrigger("doEffect");
@@ -172,8 +192,41 @@ public class GameManager : MonoBehaviour
             //Npc가 아니면 그림 투명화
             portraitImg.color = new Color(1, 1, 1, 0);
         }
+
+        //next talk
         isAction = true;
         talkIndex++;
+    }
+
+    //퀘스트 아이디, 퀘스트 인덱스, 위치 저장
+    public void GameSave()
+    {
+        PlayerPrefs.SetFloat("PlayerX", player.transform.position.x);
+        PlayerPrefs.SetFloat("PlayerY", player.transform.position.y);
+        PlayerPrefs.SetFloat("QuestId", questManager.questId);
+        PlayerPrefs.SetFloat("QuestActionIndex", questManager.questActionIndex);
+        PlayerPrefs.Save();
+
+        menuSet.SetActive(false);
+    }
+    public void GameLoad()
+    {
+        if (PlayerPrefs.HasKey("PlayerX"))
+            return;
+
+        float x = PlayerPrefs.GetFloat("playerX");
+        float y = PlayerPrefs.GetFloat("playerY");
+        int questId = PlayerPrefs.GetInt("QuestId");
+        int questActionIndex = PlayerPrefs.GetInt("questActionIndex");
+
+        player.transform.position = new Vector3(x, y, 0);
+        questManager.questId = questId;
+        questManager.questActionIndex = questActionIndex;
+        questManager.ControlObject();
+    }
+    public void GameExit()
+    {
+        Application.Quit();
     }
 }
 
