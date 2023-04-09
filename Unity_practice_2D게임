@@ -1,1 +1,110 @@
+-------------------------------------(NPC와의 대화 + 사물 설명 + 초상화띄우기)
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
 
+//플레이어 캐릭터의 스크립트
+public class LifeCycle : MonoBehaviour
+{
+    public int id;
+    public bool isNpc;
+
+}
+
+//게임 진행을 도와주는 오브젝트 따로 생성
+public class GameManager : MonoBehaviour
+{
+    //대화를 위한 변수
+    public TalkManager talkManager;
+    public GameObject talkPanel;
+    public Text talkText;
+    public GameObject scanObject;
+    public bool isAction;
+    public int talkIndex;
+    //이미지를 위한 변수
+    public Image portraitImg;
+
+    public void Action(GameObject scanObj)
+    {
+        if (isAction)
+        {
+            isAction = false;
+        }
+        else
+        {
+            isAction = true;
+            scanObject = scanObj;
+            ObjData objData = scanObject.GetComponent<ObjData>();
+            Talk(objData.id, objData.isNpc);
+        }
+        talkPanel.SetActive(isAction);
+    }
+    void Talk(int id, bool isNpc)
+    {
+        string talkData = talkManager.GetTalk(id, talkIndex);
+        if (talkData == null)
+        { 
+            isAction=false;
+            talkIndex = 0;
+            return;
+        }
+        if(isNpc)
+        {
+            talkText.text = talkData.Split(':')[0];
+            //Npc면 그림 띄우기
+            portraitImg.sprite = talkManager.GetPortrait(id, int.Parse(talkData.Split(':')[1]));
+            portraitImg.color = new Color(1, 1, 1, 1);
+        }
+        else
+        {
+            talkText.text = talkData;
+            //Npc가 아니면 그림 투명화
+            portraitImg.color = new Color(1, 1, 1, 0);
+        }
+        isAction = true;
+        talkIndex++;
+    }
+}
+
+//대화를 중계해줄 오브젝트 따로 생성
+public class TalkManager: MonoBehaviour
+{
+    Dictionary<int, string[]> talkData;
+    Dictionary<int, Sprite> portraitData;
+
+    public Sprite[] portraitArr;
+    void Awake()
+    {
+        talkData = new Dictionary<int, string[]>();
+        GenerateData();
+    }
+    void GenerateData()
+    {
+        //100, 200, 1000은 대화할 NPC의 ID이다.
+        //Npc의 문장 뒤에 초상화 주소를 적어 어떤 초상화를 내보낼건지 적는다.
+        talkData.Add(1000, new string[] {"안녕?:0", "이 곳에 처음 왔구나?:0"});
+        talkData.Add(100, new string[] {"평범한 나무상자다." });
+        talkData.Add(200, new string[] { "누군가 사용했던 흔적이 있는 책상이다." });
+
+        portraitData.Add(1000 + 0, portraitArr[0]);
+        portraitData.Add(1000 + 1, portraitArr[1]);
+        portraitData.Add(1000 + 2, portraitArr[2]);
+        portraitData.Add(1000 + 3, portraitArr[3]);
+
+    }
+
+    public string GetTalk(int id, int talkIndex)
+    {
+        if (talkIndex == talkData[id].Length)
+            return null;
+        else
+            //id로 대화를 Get한 다음 talkIndex로 대화의 한 문장을 Get한다.
+            return talkData[id][talkIndex];
+    }
+
+    public Sprite GetPortrait(int id, int portraitIndex)
+    {
+        return portraitData[id + portraitIndex];
+    }
+}
